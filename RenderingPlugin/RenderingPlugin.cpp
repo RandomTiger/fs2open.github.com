@@ -2,6 +2,12 @@
 #include "RenderingPlugin.h"
 #include "Unity/IUnityGraphics.h"
 
+#define FREESPACE_ENABLED 1
+
+#if FREESPACE_ENABLED
+#include "freespace2/freespace.h"
+#endif
+
 #include <cassert>
 #include <cmath>
 #include <cstdio>
@@ -713,6 +719,20 @@ static void DoEventGraphicsDeviceGLUnified(UnityGfxDeviceEventType eventType)
 	{
 		
 	}
+#if FREESPACE_ENABLED
+	try
+	{
+		game_init("-window", s_UnityStreamingAssetsPath.c_str());
+	}
+	catch (const std::exception& e)
+	{
+		DebugLog(e.what());
+	}
+	catch (...)
+	{
+		DebugLog("Unknown exception");
+	}
+#endif
 }
 #endif
 
@@ -837,6 +857,10 @@ static void FillTextureFromCode (int width, int height, int stride, unsigned cha
 
 static void DoRendering (const float* worldMatrix, const float* identityMatrix, float* projectionMatrix, const MyVertex* verts)
 {
+#if FREESPACE_ENABLED
+	game_process();
+#endif
+
 	// Does actual rendering of a simple triangle
 
 	#if SUPPORT_D3D9
@@ -1120,4 +1144,16 @@ void RenderScene(const float* worldMatrix, float* projectionMatrix, const MyVert
 	glVertexAttribPointer(ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(MyVertex), BUFFER_OFFSET(sizeof(float) * 3));
 
 	glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+typedef void(__stdcall *PluginCallback)(char* msg);
+static PluginCallback PluginDebugLog;
+
+extern "C" UNITY_INTERFACE_EXPORT void TakesCallback(PluginCallback PluginDebugLogFunc)
+{
+	PluginDebugLog = PluginDebugLogFunc;
+	if (PluginDebugLog)
+	{
+		PluginDebugLog("Debug from plugin setup");
+	}
 }

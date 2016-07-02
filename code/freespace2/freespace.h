@@ -227,5 +227,10 @@ extern void game_simulation_frame();
 extern void game_update_missiontime();
 extern void game_render_post_frame();
 
+/// Plugin wrappers
+int game_init(char *cmdline, const char* rootPath);
+bool game_process();
+void game_deinit();
+
 #endif			// endif of #ifndef STAMPER_PROGRAM
 #endif 

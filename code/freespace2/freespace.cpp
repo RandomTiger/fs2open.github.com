@@ -1885,7 +1885,7 @@ void game_init()
 		exit(1);
 		return;
 	}
-
+#if 0
 // Karajorma - Moved here from the sound init code cause otherwise windows complains
 #ifdef FS2_VOICER
 	if(Cmdline_voice_recognition)
@@ -2072,6 +2072,7 @@ void game_init()
 
 	mprintf(("cfile_init() took %d\n", e1 - s1));	
 	Script_system.RunBytecode(Script_gameinithook);
+#endif
 }
 
 char transfer_text[128];
@@ -6937,16 +6938,32 @@ DCF(pofspew, "Spews POF info without shutting down the game")
 	game_spew_pof_info();
 }
 
-// returns:
-//		0 on an error
-//		1 on a clean exit
-int game_main(char *cmdline)
+bool game_process()
 {
-	int state;		
+	// only important for non THREADED mode
+	os_poll();
+
+	int state = gameseq_process_events();
+	return state == GS_STATE_QUIT_GAME;
+}
+
+enum
+{
+	InitDone = 0,
+	InitFail = 1,
+	InitReady = 2,
+};
+
+int game_init(char *cmdline, const char* rootPath)
+{
+	if (rootPath != NULL && strlen(rootPath) > 0)
+	{
+		SetCurrentDirectory(rootPath);
+	}
 
 	// check if networking should be disabled, this could probably be done later but the sooner the better
 	// TODO: remove this when multi is fixed to handle more than MAX_SHIP_CLASSES_MULTI
-	if ( Ship_info.size() > MAX_SHIP_CLASSES_MULTI ) {
+	if (Ship_info.size() > MAX_SHIP_CLASSES_MULTI) {
 		Networking_disabled = 1;
 	}
 
@@ -6962,27 +6979,27 @@ int game_main(char *cmdline)
 	GlobalMemoryStatus(&ms);
 	FreeSpace_total_ram = ms.dwTotalPhys;
 
-	Mem_starttime_phys      = ms.dwAvailPhys;
-	Mem_starttime_pagefile  = ms.dwAvailPageFile;
-	Mem_starttime_virtual   = ms.dwAvailVirtual;
+	Mem_starttime_phys = ms.dwAvailPhys;
+	Mem_starttime_pagefile = ms.dwAvailPageFile;
+	Mem_starttime_virtual = ms.dwAvailVirtual;
 
-	if ( game_do_ram_check(FreeSpace_total_ram) == -1 ) {
+	if (game_do_ram_check(FreeSpace_total_ram) == -1) {
 		return 1;
 	}
 
-	if ( ms.dwTotalVirtual < 1024 )	{
-		MessageBox( NULL, XSTR( "FreeSpace requires virtual memory to run.\r\n", 196), XSTR( "No Virtual Memory", 197), MB_OK );
+	if (ms.dwTotalVirtual < 1024) {
+		MessageBox(NULL, XSTR("FreeSpace requires virtual memory to run.\r\n", 196), XSTR("No Virtual Memory", 197), MB_OK);
 		return 1;
 	}
 
-	if (!vm_init(24*1024*1024)) {
-		MessageBox( NULL, XSTR( "Not enough memory to run FreeSpace.\r\nTry closing down some other applications.\r\n", 198), XSTR( "Not Enough Memory", 199), MB_OK );
+	if (!vm_init(24 * 1024 * 1024)) {
+		MessageBox(NULL, XSTR("Not enough memory to run FreeSpace.\r\nTry closing down some other applications.\r\n", 198), XSTR("Not Enough Memory", 199), MB_OK);
 		return 1;
 	}
-		
-	char *tmp_mem = (char *) vm_malloc(16 * 1024 * 1024);
+
+	char *tmp_mem = (char *)vm_malloc(16 * 1024 * 1024);
 	if (!tmp_mem) {
-		MessageBox(NULL, XSTR( "Not enough memory to run FreeSpace.\r\nTry closing down some other applications.\r\n", 198), XSTR( "Not Enough Memory", 199), MB_OK);
+		MessageBox(NULL, XSTR("Not enough memory to run FreeSpace.\r\nTry closing down some other applications.\r\n", 198), XSTR("Not Enough Memory", 199), MB_OK);
 		return 1;
 	}
 
@@ -6991,24 +7008,24 @@ int game_main(char *cmdline)
 
 #else
 
-	vm_init(0); 
+	vm_init(0);
 
 #endif // _WIN32
 
 
-	if ( !parse_cmdline(cmdline) ) {
+	if (!parse_cmdline(cmdline)) {
 		return 1;
 	}
 
 
-	if (Is_standalone){
+	if (Is_standalone) {
 		nprintf(("Network", "Standalone running\n"));
 	}
 
 
 #ifdef _WIN32
-	if ( !Is_standalone )
-		disableWindowsKey( );
+	if (!Is_standalone)
+		disableWindowsKey();
 #endif
 
 
@@ -7016,10 +7033,10 @@ int game_main(char *cmdline)
 
 	game_init();
 	// calling the function that will init all the function pointers for TrackIR stuff (Swifty)
-	int trackIrInitResult = gTirDll_TrackIR.Init( (HWND)os_get_window( ) );
-	if ( trackIrInitResult != SCP_INITRESULT_SUCCESS )
+	int trackIrInitResult = gTirDll_TrackIR.Init((HWND)os_get_window());
+	if (trackIrInitResult != SCP_INITRESULT_SUCCESS)
 	{
-		mprintf( ("TrackIR Init Failed - %d\n", trackIrInitResult) );
+		mprintf(("TrackIR Init Failed - %d\n", trackIrInitResult));
 	}
 	game_stop_time();
 
@@ -7042,7 +7059,7 @@ int game_main(char *cmdline)
 	}
 
 	// maybe spew pof stuff
-	if(Cmdline_spew_pof_info){
+	if (Cmdline_spew_pof_info) {
 		game_spew_pof_info();
 		game_shutdown();
 		return 0;
@@ -7058,35 +7075,49 @@ int game_main(char *cmdline)
 	}
 
 	if (!Is_standalone) {
-		movie_play( NOX("intro.mve") );
+		movie_play(NOX("intro.mve"));
 	}
 
-	if (Is_standalone){
+	if (Is_standalone) {
 		gameseq_post_event(GS_EVENT_STANDALONE_MAIN);
-	} else {
+	}
+	else {
 		gameseq_post_event(GS_EVENT_GAME_INIT);		// start the game rolling -- check for default pilot, or go to the pilot select screen
 	}
 
-	while (1) {
-		// only important for non THREADED mode
-		os_poll();
+	return InitReady;
+}
 
-		state = gameseq_process_events();
-		if ( state == GS_STATE_QUIT_GAME ){
-			break;
-		}
-	} 
-
+void game_deinit()
+{
 	game_shutdown();
 
 #ifdef _WIN32
 	if ( !Is_standalone )
 		enableWindowsKey( );
 #endif
-
-	return 0;
 }
 
+// returns:
+//		0 on an error
+//		1 on a clean exit
+int game_main(char *cmdline)
+{
+	int result = game_init(cmdline, NULL);
+	if (result < InitReady) {
+		return result;
+	}
+
+	while (1) {
+		if (game_process()) {
+			break;
+		}
+
+	}
+
+	game_deinit();
+	return 1;
+}
 
 // ------------------------------------------------------------------------------
 // Platform specific main() functions, nothing directly related to game function

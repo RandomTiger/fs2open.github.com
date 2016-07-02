@@ -14,7 +14,7 @@ public class CameraPostRender : MonoBehaviour
 
     void OnPostRender()
     {
-        Debug.Log("" + Cam.projectionMatrix);
+  //      Debug.Log("" + Cam.projectionMatrix);
 
         UseRenderingPlugin.CameraPostRender();
     }

@@ -47,7 +47,7 @@
  #if defined _M_IX86 || defined _X86_
   #define BYTE_ORDER   LITTLE_ENDIAN
  #else
-  #error unknown byte order
+  #define BYTE_ORDER   LITTLE_ENDIAN
  #endif
 #endif  // BYTE_ORDER
 
