@@ -483,6 +483,7 @@ cmdline_parm frame_profile_arg("-profile_frame_time", NULL, AT_NONE); //Cmdline_
 cmdline_parm frame_profile_write_file("-profile_write_file", NULL, AT_NONE); // Cmdline_profile_write_file
 cmdline_parm no_unfocused_pause_arg("-no_unfocused_pause", NULL, AT_NONE); //Cmdline_no_unfocus_pause
 cmdline_parm benchmark_mode_arg("-benchmark_mode", NULL, AT_NONE); //Cmdline_benchmark_mode
+cmdline_parm unity_plugin_arg("-uplugin", NULL, AT_NONE);
 
 
 char *Cmdline_start_mission = NULL;
@@ -512,6 +513,7 @@ bool Cmdline_frame_profile = false;
 bool Cmdline_profile_write_file = false;
 bool Cmdline_no_unfocus_pause = false;
 bool Cmdline_benchmark_mode = false;
+bool Cmdline_unity_plugin = false;
 
 // Other
 cmdline_parm get_flags_arg("-get_flags", "Output the launcher flags file", AT_NONE);
@@ -1773,6 +1775,15 @@ bool SetCmdlineParams()
 	if (benchmark_mode_arg.found())
 	{
 		Cmdline_benchmark_mode = true;
+	}
+
+	if (unity_plugin_arg.found())
+	{
+		Cmdline_unity_plugin = true;
+		Cmdline_window = true;
+		Cmdline_nomovies = true;
+		//Cmdline_nohtl = true;
+		Cmdline_start_mission = "MDL-01";
 	}
 
 	//Deprecated flags - CommanderDJ

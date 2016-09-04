@@ -945,6 +945,7 @@
     <ClInclude Include="..\..\code\object\parseobjectdock.h" />
     <ClInclude Include="..\..\code\object\waypoint.h" />
     <ClInclude Include="..\..\code\Observer\observer.h" />
+    <ClInclude Include="..\..\code\osapi\DebugLog.h" />
     <ClInclude Include="..\..\code\osapi\monopub.h" />
     <ClInclude Include="..\..\code\osapi\osapi.h" />
     <ClInclude Include="..\..\code\osapi\osregistry.h" />

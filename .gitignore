@@ -279,3 +279,6 @@ UnityProject/UnityProject.sln
 UnityProject/Library/
 UnityProject/Temp/
 UnityProject/Assets/StreamingAssets/
+UnityProject/Builds/
+RenderingPlugin/VisualStudio2015/RenderingPlugin.VC.db
+UnityProject/UnityProject.CSharp.Plugins.csproj

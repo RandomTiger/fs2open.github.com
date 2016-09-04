@@ -7,8 +7,6 @@
  *
 */ 
 
-
-
 #ifdef _WIN32
 #include <windows.h>
 #include <windowsx.h>
@@ -34,6 +32,8 @@
 #include "palman/palman.h"
 #include "parse/scripting.h"
 #include "render/3d.h"
+
+#include "osapi/DebugLog.h"
 
 #if defined(SCP_UNIX) && !defined(__APPLE__)
 #if ( SDL_VERSION_ATLEAST(1, 2, 7) )
@@ -879,14 +879,17 @@ static bool gr_init_sub(int mode, int width, int height, int depth, float center
 	gr_screen.save_max_w_unscaled_zoomed = gr_screen.max_w_unscaled_zoomed;
 	gr_screen.save_max_h_unscaled_zoomed = gr_screen.max_h_unscaled_zoomed;
 
+	if (!Cmdline_unity_plugin)
+	{
 #ifdef WIN32
-	// FRED doesn't need this
-	if ( !Fred_running && !Is_standalone ) {
-		// for Windows, we need to do this just before the *_init() calls
-		extern void win32_create_window(int width, int height);
-		win32_create_window( width, height );
-	}
+		// FRED doesn't need this
+		if (!Fred_running && !Is_standalone) {
+			// for Windows, we need to do this just before the *_init() calls
+			extern void win32_create_window(int width, int height);
+			win32_create_window(width, height);
+		}
 #endif
+	}
 
 	switch (mode) {
 		case GR_OPENGL:
@@ -986,7 +989,7 @@ bool gr_init(int d_mode, int d_width, int d_height, int d_depth)
 	if (gr_get_resolution_class(width, height) != GR_640) {
 		// check for hi-res interface files so that we can verify our width/height is correct
 		bool has_sparky_hi = (cf_exists_full("2_ChoosePilot-m.pcx", CF_TYPE_ANY) && cf_exists_full("2_TechShipData-m.pcx", CF_TYPE_ANY));
-
+		
 		// if we don't have it then fall back to 640x480 mode instead
 		if ( !has_sparky_hi ) {
 			if ( (width == 1024) && (height == 768) ) {
@@ -2125,7 +2128,10 @@ void gr_flip()
 		profile_end("LUA On Frame");
 	}
 
-	gr_screen.gf_flip();
+	if (!Cmdline_unity_plugin)
+	{
+		gr_screen.gf_flip();
+	}
 }
 
 uint gr_determine_model_shader_flags(

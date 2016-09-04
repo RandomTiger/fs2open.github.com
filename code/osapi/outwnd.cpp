@@ -31,7 +31,8 @@
 #include "cfile/cfilesystem.h"
 #include "globalincs/globals.h"
 #include "parse/parselo.h"
-
+#include "osapi/DebugLog.h"
+#include "cmdline/cmdline.h"
 
 extern int Cmdline_debug_window;
 
@@ -429,6 +430,11 @@ void outwnd_print(const char *id, const char *tmp)
 			fputs(tmp, Log_fp);	
 			fflush(Log_fp);
 		}
+	}
+
+	if (Cmdline_unity_plugin)
+	{
+		DEBUG_LOG(tmp);
 	}
 
 	if ( !Cmdline_debug_window )

@@ -163,5 +163,6 @@ extern bool Cmdline_frame_profile;
 extern bool Cmdline_profile_write_file;
 extern bool Cmdline_no_unfocus_pause;
 extern bool Cmdline_benchmark_mode;
+extern bool Cmdline_unity_plugin;
 
 #endif

@@ -42,6 +42,7 @@
 typedef int ( * PFNGLXSWAPINTERVALSGIPROC) (int interval);
 #endif
 
+#include "osapi/DebugLog.h"
 
 #if defined(_WIN32) && !defined(__GNUC__)
 #pragma comment (lib, "opengl32")
@@ -187,34 +188,37 @@ void opengl_go_windowed()
 		return;
 
 #ifdef _WIN32
-	HWND wnd = (HWND)os_get_window();
-	Assert( wnd );
 
-	// if we are already in a windowed state, then just make sure that we are sane and bail
-	if (GL_windowed) {
-		SetForegroundWindow( wnd );
-		SetActiveWindow( wnd );
-		SetFocus( wnd );
+	if (!Cmdline_unity_plugin)
+	{
+		HWND wnd = (HWND)os_get_window();
+		Assert(wnd);
+
+		// if we are already in a windowed state, then just make sure that we are sane and bail
+		if (GL_windowed) {
+			SetForegroundWindow(wnd);
+			SetActiveWindow(wnd);
+			SetFocus(wnd);
+
+			ClipCursor(NULL);
+			ShowCursor(FALSE);
+			return;
+		}
+
+		os_suspend();
+
+		ShowWindow(wnd, SW_SHOWNORMAL);
+		UpdateWindow(wnd);
+
+		SetForegroundWindow(wnd);
+		SetActiveWindow(wnd);
+		SetFocus(wnd);
 
 		ClipCursor(NULL);
 		ShowCursor(FALSE);
-		return;
+
+		os_resume();
 	}
-
-	os_suspend();
-
-	ShowWindow( wnd, SW_SHOWNORMAL );
-	UpdateWindow( wnd );
-
-	SetForegroundWindow( wnd );
-	SetActiveWindow( wnd );
-	SetFocus( wnd );
-
-	ClipCursor(NULL);
-	ShowCursor(FALSE);
-
-	os_resume();
-
 #else
 	if (SDL_GetVideoSurface()->flags & SDL_FULLSCREEN) {
 		os_suspend();
@@ -1490,110 +1494,114 @@ int opengl_init_display_device()
 
 	// now init the display device
 #ifdef _WIN32
-	int PixelFormat;
-	HWND wnd = 0;
-	PIXELFORMATDESCRIPTOR pfd_test;
+	if (!Cmdline_unity_plugin)
+	{
+		int PixelFormat;
+		HWND wnd = 0;
+		PIXELFORMATDESCRIPTOR pfd_test;
 
-	mprintf(("  Initializing WGL...\n"));
+		mprintf(("  Initializing WGL...\n"));
 
-	memset(&GL_pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
-	memset(&pfd_test, 0, sizeof(PIXELFORMATDESCRIPTOR));
+		memset(&GL_pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+		memset(&pfd_test, 0, sizeof(PIXELFORMATDESCRIPTOR));
 
-	GL_pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-	GL_pfd.nVersion = 1;
-	GL_pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-	GL_pfd.iPixelType = PFD_TYPE_RGBA;
-	GL_pfd.cColorBits = (ubyte)bpp;
-	GL_pfd.cRedBits = (ubyte)Gr_red.bits;
-	GL_pfd.cGreenBits = (ubyte)Gr_green.bits;
-	GL_pfd.cBlueBits = (ubyte)Gr_blue.bits;
-	GL_pfd.cAlphaBits = (bpp == 32) ? (ubyte)Gr_alpha.bits : 0;
-	GL_pfd.cDepthBits = (bpp == 32) ? 24 : 16;
-	GL_pfd.cStencilBits = (bpp == 32) ? 8 : 1;
+		GL_pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+		GL_pfd.nVersion = 1;
+		GL_pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+		GL_pfd.iPixelType = PFD_TYPE_RGBA;
+		GL_pfd.cColorBits = (ubyte)bpp;
+		GL_pfd.cRedBits = (ubyte)Gr_red.bits;
+		GL_pfd.cGreenBits = (ubyte)Gr_green.bits;
+		GL_pfd.cBlueBits = (ubyte)Gr_blue.bits;
+		GL_pfd.cAlphaBits = (bpp == 32) ? (ubyte)Gr_alpha.bits : 0;
+		GL_pfd.cDepthBits = (bpp == 32) ? 24 : 16;
+		GL_pfd.cStencilBits = (bpp == 32) ? 8 : 1;
 
-	wnd = (HWND)os_get_window();
+		wnd = (HWND)os_get_window();
 
-	Assert( wnd != NULL );
+		Assert(wnd != NULL);
 
-	extern uint os_get_dc();
-	GL_device_context = (HDC)os_get_dc();
+		extern uint os_get_dc();
+		GL_device_context = (HDC)os_get_dc();
 
-	if ( !GL_device_context ) {
-		MessageBox(wnd, "Unable to get device context for OpenGL W32!", "error", MB_ICONERROR | MB_OK);
-		return 1;
-	}
+		if (!GL_device_context) {
+			MessageBox(wnd, "Unable to get device context for OpenGL W32!", "error", MB_ICONERROR | MB_OK);
+			return 1;
+		}
 
-	PixelFormat = ChoosePixelFormat(GL_device_context, &GL_pfd);
+		PixelFormat = ChoosePixelFormat(GL_device_context, &GL_pfd);
 
-	if ( !PixelFormat ) {
-		MessageBox(wnd, "Unable to choose pixel format for OpenGL W32!","error", MB_ICONERROR | MB_OK);
-		return 1;
-	} else {
-		DescribePixelFormat(GL_device_context, PixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd_test);
-
-		// make sure that we are hardware accelerated and not using the generic implementation
-		if ( !Fred_running && (pfd_test.dwFlags & PFD_GENERIC_FORMAT) && !(pfd_test.dwFlags & PFD_GENERIC_ACCELERATED) ) {
-			Assert( bpp == 32 );
-
-			// if we failed at 32-bit then we are probably a 16-bit desktop, so try and init a 16-bit visual instead
-			GL_pfd.cAlphaBits = 0;
-			GL_pfd.cDepthBits = 16;
-			GL_pfd.cStencilBits = 1;
-			// NOTE: the bit values for colors should get updated automatically by ChoosePixelFormat()
-
-			PixelFormat = ChoosePixelFormat(GL_device_context, &GL_pfd);
-
-			if (!PixelFormat) {
-				MessageBox(wnd, "Unable to choose pixel format for OpenGL W32!","error", MB_ICONERROR | MB_OK);
-				return 1;
-			}
-
-			// double-check that we are correct now
+		if (!PixelFormat) {
+			MessageBox(wnd, "Unable to choose pixel format for OpenGL W32!", "error", MB_ICONERROR | MB_OK);
+			return 1;
+		}
+		else {
 			DescribePixelFormat(GL_device_context, PixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd_test);
 
-			if ( (pfd_test.dwFlags & PFD_GENERIC_FORMAT) && !(pfd_test.dwFlags & PFD_GENERIC_ACCELERATED) ) {
-				MessageBox(wnd, "Unable to get proper pixel format for OpenGL W32!", "Error", MB_ICONERROR | MB_OK);
-				return 1;
+			// make sure that we are hardware accelerated and not using the generic implementation
+			if (!Fred_running && (pfd_test.dwFlags & PFD_GENERIC_FORMAT) && !(pfd_test.dwFlags & PFD_GENERIC_ACCELERATED)) {
+				Assert(bpp == 32);
+
+				// if we failed at 32-bit then we are probably a 16-bit desktop, so try and init a 16-bit visual instead
+				GL_pfd.cAlphaBits = 0;
+				GL_pfd.cDepthBits = 16;
+				GL_pfd.cStencilBits = 1;
+				// NOTE: the bit values for colors should get updated automatically by ChoosePixelFormat()
+
+				PixelFormat = ChoosePixelFormat(GL_device_context, &GL_pfd);
+
+				if (!PixelFormat) {
+					MessageBox(wnd, "Unable to choose pixel format for OpenGL W32!", "error", MB_ICONERROR | MB_OK);
+					return 1;
+				}
+
+				// double-check that we are correct now
+				DescribePixelFormat(GL_device_context, PixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd_test);
+
+				if ((pfd_test.dwFlags & PFD_GENERIC_FORMAT) && !(pfd_test.dwFlags & PFD_GENERIC_ACCELERATED)) {
+					MessageBox(wnd, "Unable to get proper pixel format for OpenGL W32!", "Error", MB_ICONERROR | MB_OK);
+					return 1;
+				}
 			}
 		}
+
+		if (!SetPixelFormat(GL_device_context, PixelFormat, &GL_pfd)) {
+			MessageBox(wnd, "Unable to set pixel format for OpenGL W32!", "error", MB_ICONERROR | MB_OK);
+			return 1;
+		}
+
+		GL_render_context = wglCreateContext(GL_device_context);
+		if (!GL_render_context) {
+			MessageBox(wnd, "Unable to create rendering context for OpenGL W32!", "error", MB_ICONERROR | MB_OK);
+			return 1;
+		}
+
+		if (!wglMakeCurrent(GL_device_context, GL_render_context)) {
+			MessageBox(wnd, "Unable to make current thread for OpenGL W32!", "error", MB_ICONERROR | MB_OK);
+			return 1;
+		}
+
+		mprintf(("  Requested WGL Video values = R: %d, G: %d, B: %d, depth: %d, stencil: %d, double-buffer: %d\n", Gr_red.bits, Gr_green.bits, Gr_blue.bits, GL_pfd.cDepthBits, GL_pfd.cStencilBits, (GL_pfd.dwFlags & PFD_DOUBLEBUFFER) > 0));
+
+		// now report back as to what we ended up getting
+
+		DescribePixelFormat(GL_device_context, PixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &GL_pfd);
+
+		int r = GL_pfd.cRedBits;
+		int g = GL_pfd.cGreenBits;
+		int b = GL_pfd.cBlueBits;
+		int depth = GL_pfd.cDepthBits;
+		int stencil = GL_pfd.cStencilBits;
+		int db = ((GL_pfd.dwFlags & PFD_DOUBLEBUFFER) > 0);
+
+		mprintf(("  Actual WGL Video values    = R: %d, G: %d, B: %d, depth: %d, stencil: %d, double-buffer: %d\n", r, g, b, depth, stencil, db));
+
+		// get the default gamma ramp so that we can restore it on close
+		if (GL_original_gamma_ramp != NULL) {
+			GetDeviceGammaRamp(GL_device_context, GL_original_gamma_ramp);
+		}
+
 	}
-
-	if ( !SetPixelFormat(GL_device_context, PixelFormat, &GL_pfd) ) {
-		MessageBox(wnd, "Unable to set pixel format for OpenGL W32!", "error", MB_ICONERROR | MB_OK);
-		return 1;
-	}
-
-	GL_render_context = wglCreateContext(GL_device_context);
-	if ( !GL_render_context ) {
-		MessageBox(wnd, "Unable to create rendering context for OpenGL W32!", "error", MB_ICONERROR | MB_OK);
-		return 1;
-	}
-
-	if ( !wglMakeCurrent(GL_device_context, GL_render_context) ) {
-		MessageBox(wnd, "Unable to make current thread for OpenGL W32!", "error", MB_ICONERROR | MB_OK);
-		return 1;
-	}
-
-	mprintf(("  Requested WGL Video values = R: %d, G: %d, B: %d, depth: %d, stencil: %d, double-buffer: %d\n", Gr_red.bits, Gr_green.bits, Gr_blue.bits, GL_pfd.cDepthBits, GL_pfd.cStencilBits, (GL_pfd.dwFlags & PFD_DOUBLEBUFFER) > 0));
-
-	// now report back as to what we ended up getting
-
-	DescribePixelFormat(GL_device_context, PixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &GL_pfd);
-
-	int r = GL_pfd.cRedBits;
-	int g = GL_pfd.cGreenBits;
-	int b = GL_pfd.cBlueBits;
-	int depth = GL_pfd.cDepthBits;
-	int stencil = GL_pfd.cStencilBits;
-	int db = ((GL_pfd.dwFlags & PFD_DOUBLEBUFFER) > 0);
-
-	mprintf(("  Actual WGL Video values    = R: %d, G: %d, B: %d, depth: %d, stencil: %d, double-buffer: %d\n", r, g, b, depth, stencil, db));
-
-	// get the default gamma ramp so that we can restore it on close
-	if (GL_original_gamma_ramp != NULL) {
-		GetDeviceGammaRamp( GL_device_context, GL_original_gamma_ramp );
-	}
-
 #else
 
 	int flags = SDL_OPENGL;
@@ -1831,6 +1839,7 @@ void opengl_setup_function_pointers()
 
 bool gr_opengl_init()
 {
+
 	const char *ver;
 	int major = 0, minor = 0;
 
@@ -1850,6 +1859,7 @@ bool gr_opengl_init()
 	if ( opengl_init_display_device() ) {
 		Error(LOCATION, "Unable to initialize display device!\n");
 	}
+
 
 	// version check
 	ver = (const char *)glGetString(GL_VERSION);

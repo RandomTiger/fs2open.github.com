@@ -39,6 +39,8 @@
 #	include "globalincs/mspdb_callstack.h"
 #endif
 
+#include "osapi/DebugLog.h"
+
 extern void gr_activate(int active);
 
 bool Messagebox_active = false;
@@ -1206,6 +1208,12 @@ void _cdecl Error( const char * filename, int line, const char * format, ... )
 	filename = strrchr(filename, '\\')+1;
 	snprintf(AssertText2, sizeof(AssertText2)-1, "Error: %s\r\nFile: %s\r\nLine: %d\r\n", AssertText1, filename, line);
 	mprintf(("ERROR: %s\r\nFile: %s\r\nLine: %d\r\n", AssertText1, filename, line));
+
+	if (Cmdline_unity_plugin)
+	{
+		DEBUG_LOG(AssertText2);
+		return;
+	}
 
 	Messagebox_active = true;
 

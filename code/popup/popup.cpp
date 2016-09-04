@@ -24,7 +24,7 @@
 #include "playerman/player.h"
 #include "popup/popup.h"
 #include "ui/ui.h"
-
+#include "cmdline/cmdline.h"
 
 #define POPUP_MAX_CHOICES			3					// max number of buttons allowed on popup
 
@@ -992,6 +992,11 @@ void popup_maybe_assign_keypress(popup_info *pi, int n, char *str)
 //	rval = popup(0, 2, POPUP_OK, POPUP_CANCEL, "Sorry %s, try again", pl->callsign);
 int popup(int flags, int nchoices, ... )
 {
+	if (Cmdline_unity_plugin)
+	{
+		return -1;
+	}
+
  	int			i, choice;
 	char			*format, *s;
 	va_list		args;	

@@ -228,7 +228,7 @@ extern void game_update_missiontime();
 extern void game_render_post_frame();
 
 /// Plugin wrappers
-int game_init(char *cmdline, const char* rootPath);
+int game_init(char *cmdline);
 bool game_process();
 void game_deinit();
 

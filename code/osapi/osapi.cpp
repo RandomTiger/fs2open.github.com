@@ -134,6 +134,10 @@ void os_set_process_affinity()
 void os_init(const char * wclass, const char * title, const char *app_name, const char *version_string )
 {
 	os_init_registry_stuff(Osreg_company_name, title, version_string);
+	if (Cmdline_unity_plugin)
+	{
+		return;
+	}
 
 	strcpy_s( szWinTitle, title );
 	strcpy_s( szWinClass, wclass );	
@@ -747,23 +751,26 @@ void win32_create_window(int width, int height)
 
 void os_poll()
 {
+	if (!Cmdline_unity_plugin)
+	{
 #ifndef THREADED_PROCESS
-	win32_process(0);
+		win32_process(0);
 #else
-	MSG msg;
-	ENTER_CRITICAL_SECTION( Os_lock );
-	while(PeekMessage(&msg,0,0,0,PM_NOREMOVE))	{		
-		if ( msg.message == WM_DESTROY )	{
-			break;
+		MSG msg;
+		ENTER_CRITICAL_SECTION(Os_lock);
+		while (PeekMessage(&msg, 0, 0, 0, PM_NOREMOVE)) {
+			if (msg.message == WM_DESTROY) {
+				break;
+			}
+			if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+			Got_message++;
 		}
-		if (PeekMessage(&msg,0,0,0,PM_REMOVE))	{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}		
-		Got_message++;
-	}
-	LEAVE_CRITICAL_SECTION( Os_lock );
+		LEAVE_CRITICAL_SECTION(Os_lock);
 #endif
+	}
 }
 
 void debug_int3(char *file, int line)

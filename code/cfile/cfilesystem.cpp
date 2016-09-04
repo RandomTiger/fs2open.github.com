@@ -37,7 +37,7 @@
 #include "cmdline/cmdline.h"
 #include "globalincs/pstypes.h"
 #include "localization/localize.h"
-
+#include "cmdline/cmdline.h"
 
 #define CF_ROOTTYPE_PATH 0
 #define CF_ROOTTYPE_PACK 1

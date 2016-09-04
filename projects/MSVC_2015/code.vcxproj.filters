@@ -1865,6 +1865,9 @@
     <ClInclude Include="..\..\code\model\modelrender.h">
       <Filter>Model</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\code\osapi\DebugLog.h">
+      <Filter>OsApi</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\code\directx\dxguid.lib">

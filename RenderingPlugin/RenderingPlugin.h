@@ -45,3 +45,18 @@
 	#define SUPPORT_OPENGL_UNIFIED 1
 	#define SUPPORT_OPENGL_CORE 1
 #endif
+
+enum
+{
+	EventRender = 1,
+	EventRenderTest,
+	EventRenderInit,
+	EventRenderDeinit,
+};
+
+void Plugin_RenderInit();
+void Plugin_RenderDeinit();
+
+
+typedef void(__stdcall *PluginCallback)(const char* msg);
+extern PluginCallback PluginDebugLog;

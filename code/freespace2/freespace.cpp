@@ -159,6 +159,7 @@
 #include "weapon/muzzleflash.h"
 #include "weapon/shockwave.h"
 #include "weapon/weapon.h"
+#include "osapi/DebugLog.h"
 
 #include <stdexcept>
 
@@ -1885,7 +1886,7 @@ void game_init()
 		exit(1);
 		return;
 	}
-#if 0
+
 // Karajorma - Moved here from the sound init code cause otherwise windows complains
 #ifdef FS2_VOICER
 	if(Cmdline_voice_recognition)
@@ -2072,7 +2073,6 @@ void game_init()
 
 	mprintf(("cfile_init() took %d\n", e1 - s1));	
 	Script_system.RunBytecode(Script_gameinithook);
-#endif
 }
 
 char transfer_text[128];
@@ -6954,13 +6954,8 @@ enum
 	InitReady = 2,
 };
 
-int game_init(char *cmdline, const char* rootPath)
+int game_init(char *cmdline)
 {
-	if (rootPath != NULL && strlen(rootPath) > 0)
-	{
-		SetCurrentDirectory(rootPath);
-	}
-
 	// check if networking should be disabled, this could probably be done later but the sooner the better
 	// TODO: remove this when multi is fixed to handle more than MAX_SHIP_CLASSES_MULTI
 	if (Ship_info.size() > MAX_SHIP_CLASSES_MULTI) {
@@ -7032,6 +7027,7 @@ int game_init(char *cmdline, const char* rootPath)
 	init_cdrom();
 
 	game_init();
+
 	// calling the function that will init all the function pointers for TrackIR stuff (Swifty)
 	int trackIrInitResult = gTirDll_TrackIR.Init((HWND)os_get_window());
 	if (trackIrInitResult != SCP_INITRESULT_SUCCESS)
@@ -7103,7 +7099,7 @@ void game_deinit()
 //		1 on a clean exit
 int game_main(char *cmdline)
 {
-	int result = game_init(cmdline, NULL);
+	int result = game_init(cmdline);
 	if (result < InitReady) {
 		return result;
 	}
@@ -7305,34 +7301,34 @@ void game_launch_launcher_on_exit()
 //
 void game_shutdown(void)
 {
-	gTirDll_TrackIR.Close( );
+	gTirDll_TrackIR.Close();
 	profile_deinit();
 
 	fsspeech_deinit();
 #ifdef FS2_VOICER
-	if(Cmdline_voice_recognition)
+	if (Cmdline_voice_recognition)
 	{
 		VOICEREC_deinit();
 	}
 #endif
 
 	// don't ever flip a page on the standalone!
-	if(!(Game_mode & GM_STANDALONE_SERVER)){
+	if (!(Game_mode & GM_STANDALONE_SERVER)) {
 		gr_reset_clip();
 		gr_clear();
 		gr_flip();
 	}
 
-   // if the player has left the "player select" screen and quit the game without actually choosing
-	// a player, Player will be NULL, in which case we shouldn't write the player file out!
-	if (!(Game_mode & GM_STANDALONE_SERVER) && (Player!=NULL) && !Is_standalone){
+	// if the player has left the "player select" screen and quit the game without actually choosing
+	 // a player, Player will be NULL, in which case we shouldn't write the player file out!
+	if (!(Game_mode & GM_STANDALONE_SERVER) && (Player != NULL) && !Is_standalone) {
 		Pilot.save_player();
 		Pilot.save_savefile();
 	}
 
 	// load up common multiplayer icons
 	multi_unload_common_icons();
-	hud_close();	
+	hud_close();
 	fireball_close();				// free fireball system
 	particle_close();			// close out the particle system
 	weapon_close();					// free any memory that was allocated for the weapons
@@ -7350,9 +7346,10 @@ void game_shutdown(void)
 #endif
 	fs2netd_close();
 
-	if ( Cmdline_old_collision_sys ) {
+	if (Cmdline_old_collision_sys) {
 		obj_pairs_close();		// free memory from object collision pairs
-	} else {
+	}
+	else {
 		obj_reset_colliders();
 	}
 	stars_close();			// clean out anything used by stars code
@@ -7360,7 +7357,11 @@ void game_shutdown(void)
 	// the menu close functions will unload the bitmaps if they were displayed during the game
 	main_hall_close();
 	training_menu_close();
-	gr_close();
+
+	if (!Cmdline_unity_plugin)
+	{
+		gr_close();
+	}
 
 	// free left over memory from table parsing
 	player_tips_close();
