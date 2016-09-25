@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\source\PlatformBase.h" />
+    <ClInclude Include="..\..\source\RenderAPI.h" />
+    <ClInclude Include="..\..\source\GLEW\glew.h">
+      <Filter>GLEW</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\GLEW\glxew.h">
+      <Filter>GLEW</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\GLEW\wglew.h">
+      <Filter>GLEW</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Unity\IUnityGraphics.h">
+      <Filter>Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Unity\IUnityGraphicsD3D9.h">
+      <Filter>Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Unity\IUnityGraphicsD3D11.h">
+      <Filter>Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Unity\IUnityGraphicsD3D12.h">
+      <Filter>Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Unity\IUnityGraphicsMetal.h">
+      <Filter>Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Unity\IUnityInterface.h">
+      <Filter>Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Plugin\PluginLog.h">
+      <Filter>Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Plugin\windows\ScopedSetCurrentDir.h">
+      <Filter>Plugin\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Plugin\PluginData.h">
+      <Filter>Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\code\freespace2\freespace.h">
+      <Filter>Freespace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\code\freespace2\freespaceresource.h">
+      <Filter>Freespace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\code\freespace2\levelpaging.h">
+      <Filter>Freespace</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\source\RenderAPI.cpp" />
+    <ClCompile Include="..\..\source\RenderAPI_D3D9.cpp" />
+    <ClCompile Include="..\..\source\RenderAPI_D3D11.cpp" />
+    <ClCompile Include="..\..\source\RenderAPI_OpenGL2.cpp" />
+    <ClCompile Include="..\..\source\RenderAPI_OpenGLCoreES.cpp" />
+    <ClCompile Include="..\..\source\RenderingPlugin.cpp" />
+    <ClCompile Include="..\..\source\GLEW\glew.c">
+      <Filter>GLEW</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\RenderAPI_D3D12.cpp" />
+    <ClCompile Include="..\..\source\Plugin\PluginInterface.cpp">
+      <Filter>Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Plugin\PluginLog.cpp">
+      <Filter>Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Plugin\windows\ScopedSetCurrentDir.cpp">
+      <Filter>Plugin\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Plugin\PluginData.cpp">
+      <Filter>Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Plugin\PluginFS.cpp">
+      <Filter>Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\code\freespace2\freespace.cpp">
+      <Filter>Freespace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\code\freespace2\levelpaging.cpp">
+      <Filter>Freespace</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="GLEW">
+      <UniqueIdentifier>{b44f992b-edcc-4980-b164-3dabfa390292}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Unity">
+      <UniqueIdentifier>{c01468d4-90d4-4d19-9a9b-ee2f1b5e9083}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Plugin">
+      <UniqueIdentifier>{1b1928d4-2144-4f21-a145-d65742f00c11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Plugin\Windows">
+      <UniqueIdentifier>{9408b23a-3e83-403c-b3c5-da91f8667584}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Freespace">
+      <UniqueIdentifier>{c196534d-6968-4ac4-828d-ceb04a7677f6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\source\RenderingPlugin.def" />
+  </ItemGroup>
+</Project>
